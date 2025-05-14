@@ -11,12 +11,12 @@
 "use strict";
 
 // Imports dependencies
-const Response = require("./response"),
-  i18n = require("../i18n.config"),
-  config = require("./config");
+import Response from "./response";
+import i18n from "../i18n.config";
+import config from "./config";
 
-module.exports = class Order {
-  static handlePayload(payload) {
+export default class Order {
+  static handlePayload(payload: string): any {
     let response;
 
     switch (payload) {
@@ -24,16 +24,16 @@ module.exports = class Order {
         response = Response.genQuickReply(i18n.__("order.prompt"), [
           {
             title: i18n.__("order.account"),
-            payload: "LINK_ORDER"
+            payload: "LINK_ORDER",
           },
           {
             title: i18n.__("order.search"),
-            payload: "SEARCH_ORDER"
+            payload: "SEARCH_ORDER",
           },
           {
             title: i18n.__("menu.help"),
-            payload: "CARE_ORDER"
-          }
+            payload: "CARE_ORDER",
+          },
         ]);
         break;
 
@@ -55,11 +55,15 @@ module.exports = class Order {
           Response.genImageTemplate(
             `${config.appUrl}/order.png`,
             i18n.__("order.status")
-          )
+          ),
         ];
+        break;
+
+      default:
+        response = Response.genText(i18n.__("fallback.default"));
         break;
     }
 
     return response;
   }
-};
+}

@@ -11,121 +11,140 @@
 "use strict";
 
 // Imports dependencies
-const Response = require("./response"),
-  Survey = require("./survey"),
-  config = require("./config"),
-  i18n = require("../i18n.config");
+import Response from "./response";
+import Survey from "./survey";
+import config from "./config";
+import i18n from "../i18n.config";
 
-module.exports = class Care {
-  constructor(user, webhookEvent) {
+const ensureString = (value: string | undefined): string => {
+  if (typeof value === "string") {
+    return value;
+  }
+  throw new Error("Expected a string but received undefined");
+};
+
+interface User {
+  firstName: string;
+}
+
+interface WebhookEvent {
+  // Define any properties of the webhook event if needed
+}
+
+export default class Care {
+  private user: User;
+  private webhookEvent: WebhookEvent;
+
+  constructor(user: User, webhookEvent: WebhookEvent) {
     this.user = user;
     this.webhookEvent = webhookEvent;
   }
 
-  handlePayload(payload) {
-    let response;
+  handlePayload(payload: string): any {
+    let response: any;
 
     switch (payload) {
       case "CARE_HELP":
         response = Response.genQuickReply(
           i18n.__("care.prompt", {
-            userFirstName: this.user.firstName
+            userFirstName: this.user.firstName,
           }),
           [
             {
               title: i18n.__("care.order"),
-              payload: "CARE_ORDER"
+              payload: "CARE_ORDER",
             },
             {
               title: i18n.__("care.billing"),
-              payload: "CARE_BILLING"
+              payload: "CARE_BILLING",
             },
             {
               title: i18n.__("care.other"),
-              payload: "CARE_OTHER"
-            }
+              payload: "CARE_OTHER",
+            },
           ]
         );
         break;
+
       case "CARE_ORDER":
         // Send using the Persona for order issues
-
         response = [
           Response.genTextWithPersona(
             i18n.__("care.issue", {
               userFirstName: this.user.firstName,
-              agentFirstName: config.personaOrder.name,
-              topic: i18n.__("care.order")
+              agentFirstName: ensureString(config.personaOrder.name),
+              topic: i18n.__("care.order"),
             }),
-            config.personaOrder.id
+            ensureString(config.personaOrder.id)
           ),
           Response.genTextWithPersona(
             i18n.__("care.end"),
-            config.personaOrder.id
+            ensureString(config.personaOrder.id)
           ),
-          Survey.genAgentRating(config.personaOrder.name)
+          Survey.genAgentRating(ensureString(config.personaOrder.name)),
         ];
         break;
 
       case "CARE_BILLING":
         // Send using the Persona for billing issues
-
         response = [
           Response.genTextWithPersona(
             i18n.__("care.issue", {
               userFirstName: this.user.firstName,
-              agentFirstName: config.personaBilling.name,
-              topic: i18n.__("care.billing")
+              agentFirstName: ensureString(config.personaBilling.name),
+              topic: i18n.__("care.billing"),
             }),
-            config.personaBilling.id
+            ensureString(config.personaBilling.id)
           ),
           Response.genTextWithPersona(
             i18n.__("care.end"),
-            config.personaBilling.id
+            ensureString(config.personaBilling.id)
           ),
-          Survey.genAgentRating(config.personaBilling.name)
+          Survey.genAgentRating(ensureString(config.personaBilling.name)),
         ];
         break;
 
       case "CARE_SALES":
         // Send using the Persona for sales questions
-
         response = [
           Response.genTextWithPersona(
             i18n.__("care.style", {
               userFirstName: this.user.firstName,
-              agentFirstName: config.personaSales.name
+              agentFirstName: ensureString(config.personaSales.name),
             }),
-            config.personaSales.id
+            ensureString(config.personaSales.id)
           ),
           Response.genTextWithPersona(
             i18n.__("care.end"),
-            config.personaSales.id
+            ensureString(config.personaSales.id)
           ),
-          Survey.genAgentRating(config.personaSales.name)
+          Survey.genAgentRating(ensureString(config.personaSales.name)),
         ];
         break;
 
       case "CARE_OTHER":
         // Send using the Persona for customer care issues
-
         response = [
           Response.genTextWithPersona(
             i18n.__("care.default", {
               userFirstName: this.user.firstName,
-              agentFirstName: config.personaCare.name
+              agentFirstName: ensureString(config.personaCare.name),
             }),
-            config.personaCare.id
+            ensureString(config.personaCare.id)
           ),
           Response.genTextWithPersona(
             i18n.__("care.end"),
-            config.personaCare.id
+            ensureString(config.personaCare.id)
           ),
-          Survey.genAgentRating(config.personaCare.name)
+          Survey.genAgentRating(ensureString(config.personaCare.name)),
         ];
+        break;
+
+      default:
+        response = Response.genText(i18n.__("fallback.default"));
         break;
     }
 
     return response;
   }
-};
+}

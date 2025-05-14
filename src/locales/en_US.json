@@ -1,0 +1,17 @@
+{
+	"care": {
+		"help": "care.help"
+	},
+	"fallback": {
+		"any": "fallback.any"
+	},
+	"get_started": {
+		"guidance": "get_started.guidance",
+		"help": "get_started.help"
+	},
+	"menu": {
+		"suggestion": "menu.suggestion",
+		"help": "menu.help",
+		"product_launch": "menu.product_launch"
+	}
+}

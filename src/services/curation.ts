@@ -11,34 +11,46 @@
 "use strict";
 
 // Imports dependencies
-const Response = require("./response"),
-  config = require("./config"),
-  i18n = require("../i18n.config");
+import { default as BotResponse } from "./response";
+import config from "./config";
+import i18n from "../i18n.config";
 
-module.exports = class Curation {
-  constructor(user, webhookEvent) {
+interface User {
+  firstName: string;
+  gender: string;
+}
+
+interface WebhookEvent {
+  // Define any properties of the webhook event if needed
+}
+
+export default class Curation {
+  private user: User;
+  private webhookEvent: WebhookEvent;
+
+  constructor(user: User, webhookEvent: WebhookEvent) {
     this.user = user;
     this.webhookEvent = webhookEvent;
   }
 
-  handlePayload(payload) {
-    let response;
-    let outfit;
+  handlePayload(payload: string): any {
+    let response: any;
+    let outfit: string;
 
     switch (payload) {
       case "SUMMER_COUPON":
         response = [
-          Response.genText(
+          BotResponse.genText(
             i18n.__("leadgen.promo", {
-              userFirstName: this.user.firstName
+              userFirstName: this.user.firstName,
             })
           ),
-          Response.genGenericTemplate(
+          BotResponse.genGenericTemplate(
             `${config.appUrl}/coupon.png`,
             i18n.__("leadgen.title"),
             i18n.__("leadgen.subtitle"),
-            [Response.genPostbackButton(i18n.__("leadgen.apply"), "COUPON_50")]
-          )
+            [BotResponse.genPostbackButton(i18n.__("leadgen.apply"), "COUPON_50")]
+          ),
         ];
         break;
 
@@ -46,115 +58,80 @@ module.exports = class Curation {
         outfit = `${this.user.gender}-${this.randomOutfit()}`;
 
         response = [
-          Response.genText(i18n.__("leadgen.coupon")),
-          Response.genGenericTemplate(
+          BotResponse.genText(i18n.__("leadgen.coupon")),
+          BotResponse.genGenericTemplate(
             `${config.appUrl}/looks/${outfit}.jpg`,
             i18n.__("curation.title"),
             i18n.__("curation.subtitle"),
             [
-              Response.genWebUrlButton(
+              BotResponse.genWebUrlButton(
                 i18n.__("curation.shop"),
                 `${config.shopUrl}/products/${outfit}`
               ),
-              Response.genPostbackButton(
+              BotResponse.genPostbackButton(
                 i18n.__("curation.show"),
                 "CURATION_OTHER_STYLE"
               ),
-              Response.genPostbackButton(
+              BotResponse.genPostbackButton(
                 i18n.__("curation.sales"),
                 "CARE_SALES"
-              )
+              ),
             ]
-          )
+          ),
         ];
         break;
 
       case "CURATION":
-        response = Response.genQuickReply(i18n.__("curation.prompt"), [
+        response = BotResponse.genQuickReply(i18n.__("curation.prompt"), [
           {
             title: i18n.__("curation.me"),
-            payload: "CURATION_FOR_ME"
+            payload: "CURATION_FOR_ME",
           },
           {
             title: i18n.__("curation.someone"),
-            payload: "CURATION_SOMEONE_ELSE"
-          }
+            payload: "CURATION_SOMEONE_ELSE",
+          },
         ]);
         break;
 
       case "CURATION_FOR_ME":
       case "CURATION_SOMEONE_ELSE":
-        response = Response.genQuickReply(i18n.__("curation.occasion"), [
+        response = BotResponse.genQuickReply(i18n.__("curation.occasion"), [
           {
             title: i18n.__("curation.work"),
-            payload: "CURATION_OCASION_WORK"
+            payload: "CURATION_OCASION_WORK",
           },
           {
             title: i18n.__("curation.dinner"),
-            payload: "CURATION_OCASION_DINNER"
+            payload: "CURATION_OCASION_DINNER",
           },
           {
             title: i18n.__("curation.party"),
-            payload: "CURATION_OCASION_PARTY"
+            payload: "CURATION_OCASION_PARTY",
           },
           {
             title: i18n.__("curation.sales"),
-            payload: "CARE_SALES"
-          }
+            payload: "CARE_SALES",
+          },
         ]);
         break;
 
       case "CURATION_OCASION_WORK":
-        // Store the user budget preference here
-        response = Response.genQuickReply(i18n.__("curation.price"), [
-          {
-            title: "~ $20",
-            payload: "CURATION_BUDGET_20_WORK"
-          },
-          {
-            title: "~ $30",
-            payload: "CURATION_BUDGET_30_WORK"
-          },
-          {
-            title: "+ $50",
-            payload: "CURATION_BUDGET_50_WORK"
-          }
-        ]);
-        break;
-
       case "CURATION_OCASION_DINNER":
-        // Store the user budget preference here
-        response = Response.genQuickReply(i18n.__("curation.price"), [
-          {
-            title: "~ $20",
-            payload: "CURATION_BUDGET_20_DINNER"
-          },
-          {
-            title: "~ $30",
-            payload: "CURATION_BUDGET_30_DINNER"
-          },
-          {
-            title: "+ $50",
-            payload: "CURATION_BUDGET_50_DINNER"
-          }
-        ]);
-        break;
-
       case "CURATION_OCASION_PARTY":
-        // Store the user budget preference here
-        response = Response.genQuickReply(i18n.__("curation.price"), [
+        response = BotResponse.genQuickReply(i18n.__("curation.price"), [
           {
             title: "~ $20",
-            payload: "CURATION_BUDGET_20_PARTY"
+            payload: `CURATION_BUDGET_20_${payload.split("_")[2]}`,
           },
           {
             title: "~ $30",
-            payload: "CURATION_BUDGET_30_PARTY"
+            payload: `CURATION_BUDGET_30_${payload.split("_")[2]}`,
           },
           {
             title: "+ $50",
-            payload: "CURATION_BUDGET_50_PARTY"
-          }
+            payload: `CURATION_BUDGET_50_${payload.split("_")[2]}`,
+          },
         ]);
         break;
 
@@ -171,76 +148,76 @@ module.exports = class Curation {
         break;
 
       case "CURATION_OTHER_STYLE":
-        // Build the recommendation logic here
         outfit = `${this.user.gender}-${this.randomOutfit()}`;
 
-        response = Response.genGenericTemplate(
+        response = BotResponse.genGenericTemplate(
           `${config.appUrl}/looks/${outfit}.jpg`,
           i18n.__("curation.title"),
           i18n.__("curation.subtitle"),
           [
-            Response.genWebUrlButton(
+            BotResponse.genWebUrlButton(
               i18n.__("curation.shop"),
               `${config.shopUrl}/products/${outfit}`
             ),
-            Response.genPostbackButton(
+            BotResponse.genPostbackButton(
               i18n.__("curation.show"),
               "CURATION_OTHER_STYLE"
-            )
+            ),
           ]
         );
         break;
+
       case "PRODUCT_LAUNCH":
-        // Build the recommendation logic here
         outfit = `${this.user.gender}-${this.randomOutfit()}`;
-        response = Response.genRecurringNotificationsTemplate(
+        response = BotResponse.genRecurringNotificationsTemplate(
           `${config.appUrl}/looks/${outfit}.jpg`,
           i18n.__("curation.productLaunchTitle"),
           "WEEKLY",
           "12345"
         );
         break;
+
+      default:
+        response = BotResponse.genText(i18n.__("fallback.default"));
+        break;
     }
 
     return response;
   }
 
-  genCurationResponse(payload) {
-    let occasion = payload.split("_")[3].toLowerCase();
-    let budget = payload.split("_")[2].toLowerCase();
-    let outfit = `${this.user.gender}-${occasion}`;
+  genCurationResponse(payload: string): any {
+    const occasion = payload.split("_")[3].toLowerCase();
+    const budget = payload.split("_")[2].toLowerCase();
+    const outfit = `${this.user.gender}-${occasion}`;
 
-    let buttons = [
-      Response.genWebUrlButton(
+    const buttons = [
+      BotResponse.genWebUrlButton(
         i18n.__("curation.shop"),
         `${config.shopUrl}/products/${outfit}`
       ),
-      Response.genPostbackButton(
+      BotResponse.genPostbackButton(
         i18n.__("curation.show"),
         "CURATION_OTHER_STYLE"
-      )
+      ),
     ];
 
     if (budget === "50") {
       buttons.push(
-        Response.genPostbackButton(i18n.__("curation.sales"), "CARE_SALES")
+        BotResponse.genPostbackButton(i18n.__("curation.sales"), "CARE_SALES")
       );
     }
 
-    let response = Response.genGenericTemplate(
+    return BotResponse.genGenericTemplate(
       `${config.appUrl}/looks/${outfit}.jpg`,
       i18n.__("curation.title"),
       i18n.__("curation.subtitle"),
       buttons
     );
-
-    return response;
   }
 
-  randomOutfit() {
-    let occasion = ["work", "party", "dinner"];
-    let randomIndex = Math.floor(Math.random() * occasion.length);
-
-    return occasion[randomIndex];
+  private randomOutfit(): string {
+    const occasions = ["work", "party", "dinner"];
+    const randomIndex = Math.floor(Math.random() * occasions.length);
+    return occasions[randomIndex];
   }
-};
+}

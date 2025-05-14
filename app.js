@@ -120,7 +120,7 @@ app.post("/webhook", (req, res) => {
           return;
         }
 
-        // Get the sender PSID
+        // Get the sender PSID (app specific)
         let senderPsid = webhookEvent.sender.id;
         // Get the user_ref if from Chat plugin logged in user
         let user_ref = webhookEvent.sender.user_ref;

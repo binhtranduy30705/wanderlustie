@@ -24,7 +24,12 @@ const ENV_VARS = [
   "SHOP_URL"
 ];
 
-module.exports = {
+// Define the type for personas
+type Personas = {
+  [key: string]: string | undefined;
+};
+
+const config = {
   // Messenger Platform API
   apiDomain: "https://graph.facebook.com",
   apiVersion: "v11.0",
@@ -43,7 +48,7 @@ module.exports = {
   shopUrl: process.env.SHOP_URL,
 
   // Persona IDs
-  personas: {},
+  personas: {} as Personas,
 
   // Preferred port (default to 3000)
   port: process.env.PORT || 3000,
@@ -79,7 +84,7 @@ module.exports = {
     ];
   },
 
-  pushPersona(persona) {
+  pushPersona(persona: { name: string; id: string }) {
     this.personas[persona.name] = persona.id;
   },
 
@@ -137,3 +142,5 @@ module.exports = {
     });
   }
 };
+
+export default config;

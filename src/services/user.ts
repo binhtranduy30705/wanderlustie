@@ -10,8 +10,15 @@
 
 "use strict";
 
-module.exports = class User {
-  constructor(psid) {
+export default class User {
+  psid: string;
+  firstName: string;
+  lastName: string;
+  locale: string;
+  timezone: string;
+  gender: string;
+
+  constructor(psid: string) {
     this.psid = psid;
     this.firstName = "";
     this.lastName = "";
@@ -19,11 +26,18 @@ module.exports = class User {
     this.timezone = "";
     this.gender = "neutral";
   }
-  setProfile(profile) {
+
+  setProfile(profile: {
+    firstName?: string;
+    lastName?: string;
+    locale?: string;
+    timezone?: string;
+    gender?: string;
+  }): void {
     this.firstName = profile.firstName || "";
     this.lastName = profile.lastName || "";
     this.locale = profile.locale || "";
     this.timezone = profile.timezone || "";
     this.gender = profile.gender || "";
   }
-};
+}

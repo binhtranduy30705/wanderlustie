@@ -8,6 +8,7 @@
     "lint": "./node_modules/.bin/eslint ."
   },
   "dependencies": {
+    "@langchain/core": "^0.3.55",
     "ansi-regex": "^6.0.1",
     "dotenv": "^8.1.0",
     "ejs": "^3.1.8",
@@ -15,6 +16,7 @@
     "i18n": "^0.8.3",
     "langchain": "^0.3.24",
     "node-fetch": "^2.6.1",
+    "nodemon": "^3.1.10",
     "path": "^0.12.7"
   },
   "engines": {
@@ -30,10 +32,15 @@
     "webhook"
   ],
   "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/i18n": "^0.13.12",
+    "@types/node": "^22.15.17",
     "ejs-lint": "^1.2.2",
     "eslint": "^8.24.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.7.1"
+    "prettier": "^2.7.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }

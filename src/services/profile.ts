@@ -12,11 +12,12 @@
 
 // Imports dependencies
 const GraphApi = require("./graph-api"),
-  i18n = require("../i18n.config"),
   config = require("./config"),
   locales = i18n.getLocales();
 
-module.exports = class Profile {
+import i18n from "../i18n.config";
+
+class Profile {
   setWebhook() {
     GraphApi.callSubscriptionsAPI();
     GraphApi.callSubscribedApps();
@@ -117,7 +118,7 @@ module.exports = class Profile {
     };
   }
 
-  getGreetingText(locale) {
+  getGreetingText(locale: string) {
     let param = locale === "en_US" ? "default" : locale;
 
     i18n.setLocale(locale);
@@ -133,7 +134,7 @@ module.exports = class Profile {
     return localizedGreeting;
   }
 
-  getMenuItems(locale) {
+  getMenuItems(locale: string) {
     let param = locale === "en_US" ? "default" : locale;
 
     i18n.setLocale(locale);
@@ -179,3 +180,5 @@ module.exports = class Profile {
     return whitelistedDomains;
   }
 };
+
+export default Profile;

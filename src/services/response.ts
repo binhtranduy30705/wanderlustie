@@ -10,27 +10,32 @@
 
 "use strict";
 
-const i18n = require("../i18n.config");
+import i18n from "../i18n.config";
 
-module.exports = class Response {
-  static genQuickReply(text, quickReplies) {
+export default class Response {
+  static genQuickReply(text: string, quickReplies: { title: string; payload: string }[]): any {
     let response = {
       text: text,
-      quick_replies: []
+      quick_replies: [] as { content_type: string; title: string; payload: string }[],
     };
 
     for (let quickReply of quickReplies) {
       response["quick_replies"].push({
         content_type: "text",
         title: quickReply["title"],
-        payload: quickReply["payload"]
+        payload: quickReply["payload"],
       });
     }
 
     return response;
   }
 
-  static genGenericTemplate(image_url, title, subtitle, buttons) {
+  static genGenericTemplate(
+    image_url: string,
+    title: string,
+    subtitle: string,
+    buttons: any[]
+  ): any {
     let response = {
       attachment: {
         type: "template",
@@ -41,21 +46,21 @@ module.exports = class Response {
               title: title,
               subtitle: subtitle,
               image_url: image_url,
-              buttons: buttons
-            }
-          ]
-        }
-      }
+              buttons: buttons,
+            },
+          ],
+        },
+      },
     };
     return response;
   }
 
   static genRecurringNotificationsTemplate(
-    image_url,
-    title,
-    notification_messages_frequency,
-    payload
-  ) {
+    image_url: string,
+    title: string,
+    notification_messages_frequency: string,
+    payload: string
+  ): any {
     let response = {
       attachment: {
         type: "template",
@@ -64,14 +69,14 @@ module.exports = class Response {
           title: title,
           image_url: image_url,
           notification_messages_frequency: notification_messages_frequency,
-          payload: payload
-        }
-      }
+          payload: payload,
+        },
+      },
     };
     return response;
   }
 
-  static genImageTemplate(image_url, title, subtitle = "") {
+  static genImageTemplate(image_url: string, title: string, subtitle = ""): any {
     let response = {
       attachment: {
         type: "template",
@@ -81,73 +86,70 @@ module.exports = class Response {
             {
               title: title,
               subtitle: subtitle,
-              image_url: image_url
-            }
-          ]
-        }
-      }
+              image_url: image_url,
+            },
+          ],
+        },
+      },
     };
 
     return response;
   }
 
-  static genButtonTemplate(title, buttons) {
+  static genButtonTemplate(title: string, buttons: any[]): any {
     let response = {
       attachment: {
         type: "template",
         payload: {
           template_type: "button",
           text: title,
-          buttons: buttons
-        }
-      }
+          buttons: buttons,
+        },
+      },
     };
 
     return response;
   }
 
-  static genText(text) {
-    let response = {
-      text: text
-    };
-
-    return response;
+  static genText(text: string): any {
+  return { text }; // ← not empty!
   }
 
-  static genTextWithPersona(text, persona_id) {
+
+  static genTextWithPersona(text: string, persona_id: string): any {
     let response = {
       text: text,
-      persona_id: persona_id
+      persona_id: persona_id,
     };
 
     return response;
   }
 
-  static genPostbackButton(title, payload) {
+  static genPostbackButton(title: string, payload: string): any {
     let response = {
       type: "postback",
       title: title,
-      payload: payload
+      payload: payload,
     };
 
     return response;
   }
 
-  static genWebUrlButton(title, url) {
+  static genWebUrlButton(title: string, url: string): any {
     let response = {
       type: "web_url",
       title: title,
       url: url,
-      messenger_extensions: true
+      messenger_extensions: true,
     };
 
     return response;
   }
 
-  static genNuxMessage(user) {
+  static genNuxMessage(user: { firstName: string }): any[] {
     let welcome = this.genText(
       i18n.__("get_started.welcome", {
-        userFirstName: user.firstName
+        userFirstName: user.firstName,
       })
     );
 
@@ -156,18 +158,18 @@ module.exports = class Response {
     let curation = this.genQuickReply(i18n.__("get_started.help"), [
       {
         title: i18n.__("menu.suggestion"),
-        payload: "CURATION"
+        payload: "CURATION",
       },
       {
         title: i18n.__("menu.help"),
-        payload: "CARE_HELP"
+        payload: "CARE_HELP",
       },
       {
         title: i18n.__("menu.product_launch"),
-        payload: "PRODUCT_LAUNCH"
-      }
+        payload: "PRODUCT_LAUNCH",
+      },
     ]);
 
     return [welcome, guide, curation];
   }
-};
+}
