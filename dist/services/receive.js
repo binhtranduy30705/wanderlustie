@@ -8,6 +8,15 @@
  * https://developers.facebook.com/docs/messenger-platform/getting-started/sample-apps/original-coast-clothing
  */
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import Curation from "./curation";
 import Order from "./order";
 import Lead from "./lead";
@@ -17,102 +26,108 @@ import Survey from "./survey";
 import GraphApi from "./graph-api";
 import i18n from "../i18n.config";
 import config from "./config";
-export default class Receive {
+import fs from "fs";
+import path from "path";
+import { ConversationChain } from "langchain/chains";
+import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
+import { ConversationSummaryBufferMemory } from "langchain/memory";
+class Receive {
     constructor(user, webhookEvent, isUserRef) {
+        // Load system prompt
+        this.systemPromptPath = path.join(__dirname, "../prompts", "wanderlustie.txt");
+        this.systemPrompt = fs.readFileSync(this.systemPromptPath, "utf-8");
+        // Create LangChain PromptTemplate
+        this.promptTemplate = ChatPromptTemplate.fromPromptMessages([
+            SystemMessagePromptTemplate.fromTemplate(this.systemPrompt),
+            HumanMessagePromptTemplate.fromTemplate("Conversation so far: {chat_history}"),
+            HumanMessagePromptTemplate.fromTemplate("User: {userInput}"),
+        ]);
+        this.chain = new ConversationChain({
+            llm: Receive.llm,
+            prompt: this.promptTemplate,
+            memory: Receive.memory
+        });
         this.user = user;
         this.webhookEvent = webhookEvent;
         this.isUserRef = isUserRef;
     }
     handleMessage() {
-        const event = this.webhookEvent;
-        let responses;
-        try {
-            if (event.message) {
-                const message = event.message;
-                if (message.quick_reply) {
-                    responses = this.handleQuickReply();
+        return __awaiter(this, void 0, void 0, function* () {
+            const event = this.webhookEvent;
+            let responses;
+            try {
+                if (event.message) {
+                    const message = event.message;
+                    if (message.quick_reply) {
+                        responses = this.handleQuickReply();
+                    }
+                    else if (message.attachments) {
+                        responses = this.handleAttachmentMessage();
+                    }
+                    else if (message.text) {
+                        responses = yield this.handleTextMessage();
+                    }
                 }
-                else if (message.attachments) {
-                    responses = this.handleAttachmentMessage();
+                else if (event.postback) {
+                    responses = this.handlePostback();
                 }
-                else if (message.text) {
-                    responses = this.handleTextMessage();
+                else if (event.referral) {
+                    responses = this.handleReferral();
+                }
+                else if (event.optin) {
+                    responses = this.handleOptIn();
+                }
+                else if (event.pass_thread_control) {
+                    responses = this.handlePassThreadControlHandover();
                 }
             }
-            else if (event.postback) {
-                responses = this.handlePostback();
+            catch (error) {
+                console.error(error);
+                responses = {
+                    text: `An error has occurred: '${error}'. We have been notified and will fix the issue shortly!`,
+                };
             }
-            else if (event.referral) {
-                responses = this.handleReferral();
+            if (Array.isArray(responses)) {
+                let delay = 0;
+                for (const response of responses) {
+                    this.sendMessage(response, delay * 2000, this.isUserRef);
+                    delay++;
+                }
             }
-            else if (event.optin) {
-                responses = this.handleOptIn();
+            else {
+                this.sendMessage(responses, 0, this.isUserRef);
             }
-            else if (event.pass_thread_control) {
-                responses = this.handlePassThreadControlHandover();
-            }
-        }
-        catch (error) {
-            console.error(error);
-            responses = {
-                text: `An error has occurred: '${error}'. We have been notified and will fix the issue shortly!`,
-            };
-        }
-        if (Array.isArray(responses)) {
-            let delay = 0;
-            for (const response of responses) {
-                this.sendMessage(response, delay * 2000, this.isUserRef);
-                delay++;
-            }
-        }
-        else {
-            this.sendMessage(responses, 0, this.isUserRef);
-        }
+        });
+    }
+    handlePrivateReply(type, id) {
+        console.log(`Handling private reply for type: ${type}, id: ${id}`);
+        // Add your logic for handling private replies here
     }
     handleTextMessage() {
-        var _a, _b, _c, _d, _e;
-        console.log("Received text:", `${(_a = this.webhookEvent.message) === null || _a === void 0 ? void 0 : _a.text} for ${this.user.psid}`);
-        const event = this.webhookEvent;
-        const greeting = this.firstEntity((_b = event.message) === null || _b === void 0 ? void 0 : _b.nlp, "greetings");
-        const message = ((_d = (_c = event.message) === null || _c === void 0 ? void 0 : _c.text) === null || _d === void 0 ? void 0 : _d.trim().toLowerCase()) || "";
-        let response;
-        if ((greeting && greeting.confidence > 0.8) ||
-            message.includes("start over")) {
-            response = Response.genNuxMessage(this.user);
-        }
-        else if (Number(message)) {
-            response = Order.handlePayload("ORDER_NUMBER");
-        }
-        else if (message.includes("#")) {
-            response = Survey.handlePayload("CSAT_SUGGESTION");
-        }
-        else if (message.includes(i18n.__("care.help").toLowerCase())) {
-            const care = new Care(this.user, this.webhookEvent);
-            response = care.handlePayload("CARE_HELP");
-        }
-        else {
-            response = [
-                Response.genText(i18n.__("fallback.any", {
-                    message: ((_e = event.message) === null || _e === void 0 ? void 0 : _e.text) || "",
-                })),
-                Response.genText(i18n.__("get_started.guidance")),
-                Response.genQuickReply(i18n.__("get_started.help"), [
-                    {
-                        title: i18n.__("menu.suggestion"),
-                        payload: "CURATION",
-                    },
-                    {
-                        title: i18n.__("menu.help"),
-                        payload: "CARE_HELP",
-                    },
-                    {
-                        title: i18n.__("menu.product_launch"),
-                        payload: "PRODUCT_LAUNCH",
-                    },
-                ]),
-            ];
-        }
-        return response;
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c;
+            console.log("Received text:", `${(_a = this.webhookEvent.message) === null || _a === void 0 ? void 0 : _a.text} for ${this.user.psid}`);
+            const event = this.webhookEvent;
+            const message = ((_c = (_b = event.message) === null || _b === void 0 ? void 0 : _b.text) === null || _c === void 0 ? void 0 : _c.trim().toLowerCase()) || "";
+            try {
+                // Call the LangChain ConversationChain with the user's input
+                const response = yield this.chain.call({ userInput: message });
+                // Log the conversation history for debugging
+                console.log("User Input:", message);
+                console.log("AI Response:", response.response.toString());
+                console.log("Updated Memory:", Receive.memory.chatHistory); // Log the updated memorys
+                const result = [
+                    Response.genText(response.response.toString()),
+                ];
+                // Return the AI's response
+                return result;
+            }
+            catch (error) {
+                console.error("Error generating AI response:", error);
+                return "Sorry, something went wrong.";
+            }
+        });
     }
     handleAttachmentMessage() {
         var _a, _b;
@@ -269,13 +284,14 @@ export default class Receive {
             recipient: isUserRef
                 ? { user_ref: this.user.psid }
                 : { id: this.user.psid },
-            message: response,
+            message: response, // wrap if not already wrapped
         };
         if ("persona_id" in response) {
             const personaId = response["persona_id"];
             delete response["persona_id"];
             requestBody.persona_id = personaId;
         }
+        console.log("Request Body:", requestBody);
         setTimeout(() => GraphApi.callSendApi(requestBody), delay);
     }
     sendRecurringMessage(notificationMessageToken, delay) {
@@ -318,3 +334,16 @@ export default class Receive {
         }
     }
 }
+// Initialize LangChain LLM
+Receive.llm = new ChatOpenAI({
+    openAIApiKey: process.env.OPENAI_API_KEY || "",
+    modelName: "gpt-4o",
+    temperature: 0.7,
+});
+// Add Conversation Memory
+Receive.memory = new ConversationSummaryBufferMemory({
+    memoryKey: "chat_history", // Key to store conversation history
+    returnMessages: true, // Return messages in memory
+    llm: Receive.llm, // Use the same LLM for summarization
+});
+export default Receive;

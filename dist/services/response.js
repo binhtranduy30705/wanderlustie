@@ -90,10 +90,7 @@ export default class Response {
         return response;
     }
     static genText(text) {
-        let response = {
-            text: text,
-        };
-        return response;
+        return { text }; // ← not empty!
     }
     static genTextWithPersona(text, persona_id) {
         let response = {

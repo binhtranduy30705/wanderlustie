@@ -20,7 +20,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 // Imports dependencies
 const GraphApi = require("./graph-api"), config = require("./config"), locales = i18n.getLocales();
 import i18n from "../i18n.config";
-module.exports = class Profile {
+class Profile {
     setWebhook() {
         GraphApi.callSubscriptionsAPI();
         GraphApi.callSubscribedApps();
@@ -150,4 +150,6 @@ module.exports = class Profile {
         console.log({ whitelistedDomains });
         return whitelistedDomains;
     }
-};
+}
+;
+export default Profile;

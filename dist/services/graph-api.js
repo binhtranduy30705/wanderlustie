@@ -144,4 +144,8 @@ export default class GraphApi {
     static callAppEventApi(requestBody) {
         console.log("App event API called with:", requestBody);
     }
+    static callNLPConfigsAPI() {
+        console.log("Calling NLP Configs API...");
+        // Add the actual implementation here
+    }
 }
