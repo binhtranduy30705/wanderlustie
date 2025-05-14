@@ -1,24 +1,3 @@
-.DS_Store
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Dependency directories
-node_modules/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# dotenv environment variables file
-.env*
-
 # Node.js dependencies
 node_modules/
 
@@ -29,19 +8,33 @@ dist/
 .env
 
 # Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 # Temporary files
-.DS_Store
-.vscode/
 tmp/
-logs/
+*.tmp
+*.swp
 
 # TypeScript cache
 *.tsbuildinfo
 
 # IDE-specific files
+.vscode/
 .idea/
 .history/
+
+# macOS-specific files
+.DS_Store
+
+# EJS templates (if not needed in version control)
+*.ejs
+
+# Locales (if removed from the project)
+locales/
+
+# Generated files
+coverage/
