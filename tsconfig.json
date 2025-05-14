@@ -11,6 +11,6 @@
     "typeRoots": ["./src/types", "./node_modules/@types"],
     "moduleResolution": "node"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
