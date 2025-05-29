@@ -2,9 +2,9 @@
   "name": "original-coast-clothing",
   "version": "1.0.0",
   "description": "A sample app to show how to build a great Messenger experience!",
-  "main": "new-app.js",
+  "main": "app.ts",
   "scripts": {
-    "start": "node new-app.js",
+    "start": "tsx src/app.ts",
     "lint": "./node_modules/.bin/eslint ."
   },
   "dependencies": {
@@ -15,6 +15,8 @@
     "express": "^4.17.1",
     "i18n": "^0.8.3",
     "langchain": "^0.3.24",
+    "mongodb": "^6.16.0",
+    "mongoose": "^8.15.0",
     "node-fetch": "^2.6.1",
     "nodemon": "^3.1.10",
     "path": "^0.12.7"
@@ -34,6 +36,7 @@
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/i18n": "^0.13.12",
+    "@types/mongoose": "^5.11.97",
     "@types/node": "^22.15.17",
     "ejs-lint": "^1.2.2",
     "eslint": "^8.24.0",
@@ -41,6 +44,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.7.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }

@@ -11,13 +11,16 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import connectDB from './config/db';
+connectDB();
+
 import express, { Request, Response } from "express";
 import bodyParser from "body-parser";
 import crypto from "crypto";
 import path from "path";
 import Receive from "./services/receive";
 import GraphApi from "./services/graph-api";
-import User from "./services/user";
+import User from "./models/user";
 import config from "./services/config";
 import i18n from "./i18n.config";
 import Profile from "./services/profile";
@@ -40,6 +43,7 @@ app.use(express.static(path.join(path.resolve(), "public")));
 
 // Set template engine in Express
 app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "../views"));
 
 // Respond with index file when a GET request is made to the homepage
 app.get("/", (_req: Request, res: Response) => {
@@ -107,32 +111,47 @@ app.post("/webhook", (req: Request, res: Response) => {
         }
 
         if (senderPsid) {
-          if (!(senderPsid in users)) {
-            if (!guestUser) {
-              const user = new User(senderPsid);
-              try {
-                const userProfile = await GraphApi.getUserProfile(senderPsid);
-                if (userProfile) {
-                  user.setProfile({ ...userProfile, timezone: userProfile.timezone.toString() });
-                }
-              } catch (error) {
-                console.log("Profile is unavailable:", error);
-              } finally {
-                users[senderPsid] = user;
-                i18n.setLocale("en_US");
-                return receiveAndReturn(users[senderPsid], webhookEvent, false);
-              }
-            } else {
-              setDefaultUser(senderPsid);
-              return receiveAndReturn(users[senderPsid], webhookEvent, false);
-            }
-          } else {
-            i18n.setLocale(users[senderPsid].locale);
-            return receiveAndReturn(users[senderPsid], webhookEvent, false);
-          }
-        } else if (user_ref) {
-          setDefaultUser(user_ref);
-          return receiveAndReturn(users[user_ref], webhookEvent, true);
+  // Check if the user already exists in the database
+  const user = await User.findOne({ where: { fbId: senderPsid } }); 
+  if (user) {
+    return receiveAndReturn(user, webhookEvent, false);
+  } else {
+    const userProfile = await GraphApi.getUserProfile(senderPsid);
+    if (userProfile) {
+      const newUser = await User.create({
+        psid: senderPsid,
+        fbId: senderPsid,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        messengerName: `${userProfile.firstName} ${userProfile.lastName}`,
+        locale: userProfile.locale,
+        timezone: userProfile.timezone.toString(),
+        gender: userProfile.gender,
+      });
+      users[senderPsid] = newUser;
+    }
+    }
+  if (!(senderPsid in users)) {
+    if (!guestUser) {
+      const user = new User(senderPsid);
+      try {
+        const userProfile = await GraphApi.getUserProfile(senderPsid);
+        if (userProfile) {
+          user.setProfile({ ...userProfile, timezone: userProfile.timezone.toString() });
+        }
+      } catch (error) {
+        console.log("Profile is unavailable:", error);
+      } finally {
+        users[senderPsid] = user;
+        i18n.setLocale("en_US");
+        return receiveAndReturn(users[senderPsid], webhookEvent, false);
+      }
+    }
+  }
+}
+        else if (user_ref) {
+        setDefaultUser(user_ref);
+        return receiveAndReturn(users[user_ref], webhookEvent, true);
         }
       });
     });
